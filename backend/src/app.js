@@ -4,8 +4,11 @@ const app = express();
 // middleware
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
+//import routes
+import userRoutes from "./routes/user.route.js";
+// use routes
+app.use("/api/v1/users", userRoutes);
+
+
 
 export default app;
