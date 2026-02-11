@@ -25,6 +25,7 @@ const userSchema = new Schema({
         lowercase:true,
         trim:true,
     },
+    refreshToken: { type: String }, // Add this for refresh flow
 
 
 },

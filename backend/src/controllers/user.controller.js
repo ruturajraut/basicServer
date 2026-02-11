@@ -1,5 +1,6 @@
 
 import {User} from "../models/user.model.js";
+import { generateAccessToken, generateRefreshToken } from "../config/jwt.js";
 
 const registerUser = async (req, res) => {
     try {
@@ -23,6 +24,8 @@ const registerUser = async (req, res) => {
                 password,
                 loggedIn:false,
         });
+
+        
 
         res.status(201).json({message:"User registered successfully", user:{_id:user._id, username:user.username, email:user.email} });
 
@@ -56,7 +59,10 @@ const loginUser = async (req, res) => {
         user.loggedIn = true;
         await user.save();
 
-        res.status(200).json({message:"Login successful", user:{_id:user._id, username:user.username, email:user.email, loggedIn:user.loggedIn} });
+        const accessToken = generateAccessToken(user._id);
+        const refreshToken = generateRefreshToken(user._id);
+
+        res.status(200).json({message:"Login successful", user:{_id:user._id, username:user.username, email:user.email, loggedIn:user.loggedIn, accessToken, refreshToken} });
 
     } catch (error) {
         console.error("Error logging in user:", error);
@@ -65,26 +71,30 @@ const loginUser = async (req, res) => {
 }
 
 const logoutUser = async (req, res) => {
-    try {
-        const {email} = req.body;
-        //basic validation
-        if(!email){
-            return res.status(400).json({message:"Email is required"});
-        }
-        //check if user exists
-        const user = await User.findOne({email:email.toLowerCase()});
-        if(!user){
-            return res.status(404).json({message:"User not found"});
-        }
-        //update loggedIn status        user.loggedIn = false;
-        user.loggedIn = false;
-        await user.save();
-        res.status(200).json({message:"Logged out successfully"});
-    } catch (error) {
-        console.error("Error logging out user:", error);
-        return res.status(500).json({message:"Internal server error"});
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
     }
-}
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Reset login state and clear refresh token
+    user.loggedIn = false;
+    user.refreshToken = null;
+    await user.save();
+
+    // res.clearCookie('refreshToken'); // if you’re using cookies
+
+    return res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.error("Error logging out user:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 
 
