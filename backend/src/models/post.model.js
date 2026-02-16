@@ -16,7 +16,12 @@ const postSchema = new Schema({
         required:true,
         min:1,
         max:150
-    }
+    },
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+        }
     
 
 },{timestamps:true});
